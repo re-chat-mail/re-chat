@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Re:Chat – Email, simplified</title>
+    <meta name="description" content="Strukturierte Visualisierung und lückenlose Einzelseiten-Archivierung komplexer E-Mail-Verläufe aus EML-Dateien.">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --border: #e4e4e7;
+            --border-dark: #27272a;
+            --text-main: #18181b;
+            --text-muted: #71717a;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "Liberation Mono", Consolas, Menlo, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+            padding: 48px 20px 80px 20px;
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        /* Kopfbereich */
+        header.project-header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 40px;
+        }
+
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .project-sub {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* Einleitungstext */
+        .intro-text {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #27272a;
+            margin-bottom: 44px;
+        }
+
+        /* Bereichs-Überschriften */
+        h2.section-heading {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* Vorschau-Container */
+        .preview-wrapper {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 24px;
+            margin-bottom: 48px;
+        }
+
+        .thread-meta {
+            border-bottom: 1px solid #f4f4f5;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+
+        .thread-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .thread-subject {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .participants-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .participant-tag {
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            padding: 2px 7px;
+            border-radius: 3px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .meta-brand-footer {
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #f4f4f5;
+            text-align: right;
+            font-size: 0.72rem;
+            font-style: italic;
+            color: #a1a1aa;
+        }
+
+        .meta-brand-footer strong {
+            color: #52525b;
+            font-weight: 600;
+        }
+
+        /* Thread-Karten im Preview */
+        .thread-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left-width: 3px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .thread-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .card-header {
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f4f4f5;
+            background: #fafafa;
+            font-size: 0.85rem;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .sender-name {
+            font-weight: 600;
+        }
+
+        .sender-addr {
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-left: 6px;
+            font-weight: 400;
+        }
+
+        .meta-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .card-index {
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 14px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #27272a;
+            white-space: pre-wrap;
+        }
+
+        /* Spezifikations-Tabelle */
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-bottom: 48px;
+        }
+
+        .specs-table th {
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-dark);
+        }
+
+        .specs-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .specs-table td.col-prop {
+            font-weight: 600;
+            width: 32%;
+            color: var(--text-main);
+        }
+
+        .specs-table td.col-desc {
+            color: #3f3f46;
+        }
+
+        /* Footer */
+        footer.page-footer {
+            border-top: 1px solid var(--border);
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .slogan-box {
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        .slogan-box strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <header class="project-header">
+            <h1 class="project-title">Re:Chat</h1>
+            <div class="project-sub">Email, simplified.</div>
+        </header>
+
+        <p class="intro-text">
+            Exportierte E-Mail-Konversationen liegen meist als unübersichtliche, tief ineinander verschachtelte Zitatblöcke vor. Re:Chat löst diese Strukturen auf und stellt die gesamte Korrespondenz als geordnete, chronologische Gesprächsfolge dar — optimiert für Übersichtlichkeit, Nachvollziehbarkeit und Archivierung.
+        </p>
+
+        <h2 class="section-heading">Visuelle Aufbereitung</h2>
+        <div class="preview-wrapper">
+            <div class="thread-meta">
+                <div class="thread-label">Betreff</div>
+                <div class="thread-subject">Abstimmung Prüfprotokoll & Freigabe Sensorik</div>
+                <div class="participants-row">
+                    <span class="participant-tag" style="border-color: #0284c7; color: #0369a1;">s.novak@beispiel.at</span>
+                    <span class="participant-tag" style="border-color: #0d9488; color: #0f766e;">projektleitung@firma.at</span>
+                </div>
+                <div class="meta-brand-footer">
+                    Email Conversation exported by <strong>Re:Chat – Email, simplified</strong> · © 2026
+                </div>
+            </div>
+
+            <!-- Nachricht 1 -->
+            <article class="thread-card" style="border-left-color: #0284c7;">
+                <header class="card-header">
+                    <div>
+                        <span class="sender-name" style="color: #0369a1;">Stefan Novak</span>
+                        <span class="sender-addr"><s.novak@beispiel.at></span>
+                    </div>
+                    <div class="meta-info">
+                        <time>Mo., 14. Sept. 2026, 09:15 Uhr</time>
+                        <span class="card-index">#1</span>
+                    </div>
+                </header>
+                <div class="card-body">Hallo zusammen,
+
+anbei die aktuellen Messwerte der Sensorik. Bitte gebt mir kurz Bescheid, ob die Schwellenwerte für den Testlauf so freigegeben sind.
+
+Viele Grüße,
+Stefan</div>
+            </article>
+
+            <!-- Nachricht 2 -->
+            <article class="thread-card" style="border-left-color: #0284c7;">
+                <header class="card-header">
+                    <div>
+                        <span class="sender-name" style="color: #0369a1;">Stefan Novak</span>
+                        <span class="sender-addr"><s.novak@beispiel.at></span>
+                    </div>
+                    <div class="meta-info">
+                        <time>Mo., 14. Sept. 2026, 09:22 Uhr</time>
+                        <span class="card-index">#2</span>
+                    </div>
+                </header>
+                <div class="card-body">Nachtrag: Die Kalibrierungsparameter auf Kanal 3 wurden ebenfalls auf den neuen Treiber angepasst.</div>
+            </article>
+
+            <!-- Nachricht 3 -->
+            <article class="thread-card" style="border-left-color: #0d9488;">
+                <header class="card-header">
+                    <div>
+                        <span class="sender-name" style="color: #0f766e;">Projektleitung</span>
+                        <span class="sender-addr"><projektleitung@firma.at></span>
+                    </div>
+                    <div class="meta-info">
+                        <time>Mo., 14. Sept. 2026, 10:05 Uhr</time>
+                        <span class="card-index">#3</span>
+                    </div>
+                </header>
+                <div class="card-body">Passt soweit. Die Freigabe ist im System hinterlegt, wir können direkt mit dem Prüflauf starten.</div>
+            </article>
+        </div>
+
+        <h2 class="section-heading">Kernmerkmale</h2>
+        <table class="specs-table">
+            <thead>
+                <tr>
+                    <th>Bereich</th>
+                    <th>Funktionsweise</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-prop">Nicht-lineare Antworten</td>
+                    <td class="col-desc">Erkennt eigenständige Nachfragen und Selbst-Antworten vor Eingang einer Gegenantwort, ohne den Verlauf fälschlich ineinanderzuschieben.</td>
+                </tr>
+                <tr>
+                    <td class="col-prop">Client-Formate</td>
+                    <td class="col-desc">Robuste Erkennung variierender Kopfzeilen und umgebrochener Datumsformate aus Outlook, Gmail, Apple Mail, Thunderbird und weiteren Systemen.</td>
+                </tr>
+                <tr>
+                    <td class="col-prop">Layout & Codeblöcke</td>
+                    <td class="col-desc">Bereinigt Zitat-Präfixe (>), erhält jedoch Leerzeichen, Tabulatoren, Einrückungen und Codeabschnitte im Textkörper exakt aufrecht.</td>
+                </tr>
+                <tr>
+                    <td class="col-prop">Einzelseiten-Export</td>
+                    <td class="col-desc">Generiert eine nahtlose PDF-Datei mit dynamisch berechneter Höhe, um störende Seitenumbrüche mitten im Satz oder innerhalb von Nachrichtenblöcken zu vermeiden.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <footer class="page-footer">
+            <div class="slogan-box">
+                <strong>Re:Chat – Email, simplified</strong> · © 2026
+            </div>
+			<div>
+				<a href="#top">Nach oben ↑</a>
+			</div>
+        </footer>
+    </main>
+</body>
+</html>
